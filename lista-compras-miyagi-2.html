@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista Miyagi</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Lista Miyagi" />
+  <meta name="application-name" content="Lista Miyagi" />
+  <meta name="theme-color" content="#0A0A0A" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%230A0A0A'/%3E%3Ctext y='90' x='50%25' text-anchor='middle' font-size='76'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: #0A0A0A;
+      color: #F0EFE8;
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+    #root { max-width: 480px; margin: 0 auto; }
+
+    /* Header */
+    .header {
+      background: #0A0A0A;
+      border-bottom: 1px solid #1C1C1C;
+      padding: 20px 18px 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .brand {
+      font-size: 10px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: #3A3A3A;
+      margin-bottom: 4px;
+      font-family: 'Syne', sans-serif;
+    }
+    .title {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .counter {
+      text-align: right;
+    }
+    .counter-badge {
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.3s;
+      font-family: 'Syne', sans-serif;
+    }
+    .counter-badge.active { background: #FF5C5C; color: #fff; }
+    .counter-badge.inactive { background: #1A1A1A; color: #3A3A3A; }
+    .counter-label { font-size: 9px; color: #333; margin-top: 4px; letter-spacing: 2px; text-transform: uppercase; }
+
+    /* Filter bar */
+    .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .filter-btn {
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      font-family: 'Space Mono', monospace;
+      border: 1px solid #2A2A2A;
+      background: transparent;
+      color: #444;
+    }
+    .filter-btn.active { background: #F0EFE8; color: #0A0A0A; border-color: #F0EFE8; }
+    .clear-btn {
+      margin-left: auto;
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      font-family: 'Space Mono', monospace;
+      border: 1px solid rgba(255,92,92,0.2);
+      background: transparent;
+      color: #FF5C5C;
+    }
+    .clear-btn.confirm { background: #FF5C5C; color: #fff; border-color: #FF5C5C; }
+
+    /* Categories */
+    .categories { padding: 12px 14px 0; }
+    .category {
+      margin-bottom: 8px;
+      border: 1px solid #1A1A1A;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .cat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #141414;
+      padding: 13px 15px;
+      cursor: pointer;
+      user-select: none;
+      border: none;
+      width: 100%;
+      color: #F0EFE8;
+      font-family: 'Space Mono', monospace;
+      transition: background 0.15s;
+    }
+    .cat-header:hover { background: #181818; }
+    .cat-left { display: flex; align-items: center; gap: 10px; }
+    .cat-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cat-name { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; font-family: 'Syne', sans-serif; font-size: 13px; }
+    .cat-right { display: flex; align-items: center; gap: 8px; }
+    .cat-count {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .cat-arrow { color: #333; font-size: 11px; transition: transform 0.2s; }
+    .cat-arrow.open { transform: rotate(0deg); }
+    .cat-arrow.closed { transform: rotate(-90deg); }
+
+    /* Items */
+    .cat-items { background: #0D0D0D; }
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 12px 15px;
+      border-top: 1px solid #161616;
+      cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .item:first-child { border-top: none; }
+    .item:active { opacity: 0.7; }
+    .checkbox {
+      width: 20px; height: 20px;
+      border-radius: 5px;
+      border: 2px solid #2A2A2A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .checkbox.checked { border-color: var(--cat-color); background: var(--cat-color); }
+    .checkbox svg { display: none; }
+    .checkbox.checked svg { display: block; }
+    .item-label {
+      font-size: 13px;
+      color: #A0A09A;
+      font-weight: 400;
+      letter-spacing: 0.2px;
+      transition: all 0.2s;
+      flex: 1;
+    }
+    .item-label.checked {
+      text-decoration: line-through;
+      color: var(--cat-color);
+      opacity: 0.7;
+    }
+    .comprar-badge {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--cat-color);
+      opacity: 0.6;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* Floating pill */
+    .floating-pill {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #F0EFE8;
+      color: #0A0A0A;
+      padding: 13px 26px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+      white-space: nowrap;
+      font-family: 'Syne', sans-serif;
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn {
+      from { transform: translateX(-50%) scale(0.8); opacity: 0; }
+      to   { transform: translateX(-50%) scale(1);   opacity: 1; }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #2A2A2A;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+<script>
+const { useState, useEffect } = React;
+
+const STORAGE_KEY = "miyagi-compras-v1";
+
+const CATEGORIES = [
+  { id:"proteinas", label:"🐟 Proteínas", color:"#FF6B6B",
+    items:["Salmón","Atún","Camarón","Cangrejo","Robalo","Anguila","Tofu"] },
+  { id:"congelados", label:"🧊 Congelados", color:"#74B9FF",
+    items:["Wakame","Spring rolls","Gyozas","Edamame con piel","Edamame sin piel","Hielo","Pan bao"] },
+  { id:"secos", label:"🌾 Secos", color:"#FDCB6E",
+    items:["Nori","Arroz sushi","Soybean paper","Maíz tostado","Pimienta","Tempura batter mix","Cereal","Azúcar blanca","Azúcar morena","Sal","Sal marina","Kombu","Semillas de ajonjolí","Noodles","Barquillas helado","Togarashi","Wasabi","Té frío"] },
+  { id:"verduras", label:"🥬 Verduras", color:"#55EFC4",
+    items:["Aguacate","Pepino","Zucchini","Tomate 3x3","Tomate cherry","Cebolla blanca","Cebolla morada","Berenjena","Coliflor","Yerbabuena","Plátano verde","Plátano maduro","Cebollín","Ají dulce","Jengibre","Remolacha"] },
+  { id:"frutas", label:"🍍 Frutas", color:"#A29BFE",
+    items:["Limones","Banana","Piña","Maracuyá","Fresa","Mango","Manzana"] },
+  { id:"salsas", label:"🫙 Salsas y Aderezos", color:"#FD79A8",
+    items:["Salsa de soya","Gari pink","Aceite de ajonjolí","Aceite de trufa","Kimchi base","Sriracha","Mayonesa","Queso crema","Gochujang","Mostaza","Miel","Salsa de ají y ajos","Sola light LKK","Aceite super fry","Vinagre"] },
+  { id:"bebidas", label:"🥤 Sodas y Bebidas", color:"#00CEC9",
+    items:["Coca Cola","Coca Cola Zero","Agua","Agua con gas","Canada Dry","Jugo de naranja"] },
+  { id:"licor", label:"🍶 Licor", color:"#E17055",
+    items:["Ron Bacardí","Sangría","Cerveza Osaka","Kombucha","Sake","Vino tinto"] },
+  { id:"packaging", label:"📦 Packaging", color:"#B2BEC3",
+    items:["Bolsas kraft","Envases sushi","Palitos sushi / Chopsticks","Envases bowl","Envases salsa","Servilletas","Pitillos","Grapas","Bolsitas porcionar fruta"] },
+  { id:"limpieza", label:"🧹 Limpieza", color:"#81ECEC",
+    items:["Lavaplatos","Esponja","Esponja de brillo","Pañitos","Papel higiénico","Papel absorbente","Bolsas de basura"] },
+];
+
+function loadChecked() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { return {}; }
+}
+
+function App() {
+  const [checked, setChecked]       = useState(loadChecked);
+  const [collapsed, setCollapsed]   = useState({});
+  const [filter, setFilter]         = useState("all");
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch {}
+  }, [checked]);
+
+  const toggle = (key) => setChecked(p => ({ ...p, [key]: !p[key] }));
+  const toggleCat = (id) => setCollapsed(p => ({ ...p, [id]: !p[id] }));
+
+  const totalSelected = Object.values(checked).filter(Boolean).length;
+  const totalItems    = CATEGORIES.reduce((a,c) => a + c.items.length, 0);
+
+  const handleClear = () => {
+    if (confirmClear) { setChecked({}); setConfirmClear(false); }
+    else { setConfirmClear(true); setTimeout(() => setConfirmClear(false), 3000); }
+  };
+
+  const visibleCats = CATEGORIES.map(cat => ({
+    ...cat,
+    visibleItems: cat.items.filter(item => {
+      const k = `${cat.id}__${item}`;
+      if (filter === "selected") return checked[k];
+      if (filter === "pending")  return !checked[k];
+      return true;
+    }),
+    checkedCount: cat.items.filter(item => checked[`${cat.id}__${item}`]).length,
+  })).filter(cat => cat.visibleItems.length > 0);
+
+  return React.createElement("div", null,
+    // HEADER
+    React.createElement("div", { className: "header" },
+      React.createElement("div", { className: "header-top" },
+        React.createElement("div", null,
+          React.createElement("div", { className: "brand" }, "Sushi Miyagi"),
+          React.createElement("div", { className: "title" }, "Lista de Compras")
+        ),
+        React.createElement("div", { className: "counter" },
+          React.createElement("div", { className: `counter-badge ${totalSelected > 0 ? "active" : "inactive"}` },
+            `${totalSelected} / ${totalItems}`
+          ),
+          React.createElement("div", { className: "counter-label" }, "marcados")
+        )
+      ),
+      React.createElement("div", { className: "filter-bar" },
+        ["all","selected","pending"].map(f =>
+          React.createElement("button", {
+            key: f,
+            className: `filter-btn ${filter === f ? "active" : ""}`,
+            onClick: () => setFilter(f)
+          }, f === "all" ? "Todos" : f === "selected" ? "Por comprar" : "Sin marcar")
+        ),
+        totalSelected > 0 && React.createElement("button", {
+          className: `clear-btn ${confirmClear ? "confirm" : ""}`,
+          onClick: handleClear
+        }, confirmClear ? "¿Seguro?" : "Limpiar")
+      )
+    ),
+
+    // CATEGORIES
+    React.createElement("div", { className: "categories" },
+      visibleCats.length === 0
+        ? React.createElement("div", { className: "empty-state" }, "— Sin resultados —")
+        : visibleCats.map(cat =>
+          React.createElement("div", { key: cat.id, className: "category" },
+            // Cat header
+            React.createElement("button", {
+              className: "cat-header",
+              onClick: () => toggleCat(cat.id)
+            },
+              React.createElement("div", { className: "cat-left" },
+                React.createElement("div", {
+                  className: "cat-dot",
+                  style: { background: cat.color, boxShadow: `0 0 8px ${cat.color}66` }
+                }),
+                React.createElement("span", { className: "cat-name" }, cat.label)
+              ),
+              React.createElement("div", { className: "cat-right" },
+                cat.checkedCount > 0 && React.createElement("span", {
+                  className: "cat-count",
+                  style: { color: cat.color, background: `${cat.color}18` }
+                }, cat.checkedCount),
+                React.createElement("span", {
+                  className: `cat-arrow ${collapsed[cat.id] ? "closed" : "open"}`
+                }, "▾")
+              )
+            ),
+            // Items
+            !collapsed[cat.id] && React.createElement("div", { className: "cat-items" },
+              cat.visibleItems.map(item => {
+                const key = `${cat.id}__${item}`;
+                const isChecked = !!checked[key];
+                return React.createElement("div", {
+                  key: item,
+                  className: "item",
+                  style: { "--cat-color": cat.color, background: isChecked ? `${cat.color}0A` : "transparent" },
+                  onClick: () => toggle(key)
+                },
+                  React.createElement("div", { className: `checkbox ${isChecked ? "checked" : ""}`, style: { "--cat-color": cat.color } },
+                    React.createElement("svg", { width:10, height:8, viewBox:"0 0 10 8", fill:"none" },
+                      React.createElement("path", { d:"M1 4L3.5 6.5L9 1", stroke:"#0A0A0A", strokeWidth:2.2, strokeLinecap:"round", strokeLinejoin:"round" })
+                    )
+                  ),
+                  React.createElement("span", {
+                    className: `item-label ${isChecked ? "checked" : ""}`,
+                    style: { "--cat-color": cat.color }
+                  }, item),
+                  isChecked && React.createElement("span", { className: "comprar-badge", style: { "--cat-color": cat.color } }, "COMPRAR")
+                );
+              })
+            )
+          )
+        )
+    ),
+
+    // FLOATING PILL
+    totalSelected > 0 && React.createElement("div", { className: "floating-pill" },
+      `🛒 ${totalSelected} producto${totalSelected !== 1 ? "s" : ""} por comprar`
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
